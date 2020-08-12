@@ -1,2 +1,2 @@
 # deeprl-reinplementations
-Reinplementations of import deep RL algorithms
+Reinplementations of important deep RL algorithms
