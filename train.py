@@ -15,22 +15,16 @@ from torch.utils.tensorboard import SummaryWriter
 
 writer = SummaryWriter()
 
-BATCH_SIZE = 128
+BATCH_SIZE = 512
 GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
-EPS_DECAY = 200
-TARGET_UPDATE = 10
+EPS_DECAY = 1000
+TARGET_UPDATE = 4
 
 env = gym.make('CartPole-v0').unwrapped
 env.reset()
-# set up matplotlib
-is_ipython = 'inline' in matplotlib.get_backend()
-if is_ipython:
-    from IPython import display
-plt.ion()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 resize = T.Compose([T.ToPILImage(),
                     T.Resize(40, interpolation=Image.CUBIC),
                     T.ToTensor()])
@@ -69,8 +63,8 @@ policy_net = DQN(screen_height, screen_width, n_actions).to(device)
 target_net = DQN(screen_height, screen_width, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
-optimizer = optim.RMSprop(policy_net.parameters())
-memory = ReplayMemory(10000)
+optimizer = optim.RMSprop(policy_net.parameters(), lr=0.0025)
+memory = ReplayMemory(1000000)
 
 steps_done = 0
 
@@ -124,7 +118,7 @@ def optimize_model():
     optimizer.step()
     return loss
 
-num_episodes = 500
+num_episodes = 100
 for i_episode in range(num_episodes):
     env.reset()
     last_screen = get_screen()
@@ -152,8 +146,9 @@ for i_episode in range(num_episodes):
             episode_durations.append(t+1)
             writer.add_scalar("Duration/episode", t+1, global_step=i_episode)
             break
-        if i_episode % TARGET_UPDATE == 0:
-            target_net.load_state_dict(policy_net.state_dict())
+    if i_episode % TARGET_UPDATE == 0:
+        print("Updating target network.\n")
+        target_net.load_state_dict(policy_net.state_dict())
 print("Training Complete.")
 env.render()
 env.close()
