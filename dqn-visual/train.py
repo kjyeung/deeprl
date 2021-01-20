@@ -17,7 +17,7 @@ writer = SummaryWriter()
 
 BATCH_SIZE = 512
 GAMMA = 0.999
-EPS_START = 0.9
+EPS_START = 1
 EPS_END = 0.05
 EPS_DECAY = 1000
 TARGET_UPDATE = 4
@@ -63,7 +63,7 @@ policy_net = DQN(screen_height, screen_width, n_actions).to(device)
 target_net = DQN(screen_height, screen_width, n_actions).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval()
-optimizer = optim.RMSprop(policy_net.parameters(), lr=0.0025)
+optimizer = optim.RMSprop(policy_net.parameters(), lr=0.001)
 memory = ReplayMemory(1000000)
 
 steps_done = 0
