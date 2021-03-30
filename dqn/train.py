@@ -13,8 +13,8 @@ REPLAY_SIZE = 5000
 LR =  0.001
 test_interval = 1000
 test_episodes = 100
-TIMESTEPS=10000
-EPSILON_ENDT = 5000
+TIMESTEPS=5000
+EPSILON_ENDT = 1000
 
 env = gym.make('CartPole-v0')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -50,9 +50,9 @@ while agent.time_step < TIMESTEPS:
         writer.add_scalar("loss/agent_step", loss, global_step=agent.time_step)
         writer.add_scalar("epsion/agent_step", epsilon, global_step=agent.time_step)
 
+    average_test_reward = 0
     if agent.time_step % test_interval == 0:
         print("Testing at {}".format(agent.time_step))
-        average_test_reward = 0
         for i in range(test_episodes):
             test_state = env.reset()
             for t in count():
@@ -65,8 +65,12 @@ while agent.time_step < TIMESTEPS:
                     break
                 else:
                     test_state = test_next_state
-        writer.add_scalar("Test reward", average_test_reward/test_episodes, global_step=agent.time_step)
+        average_test_reward /= test_episodes
+        writer.add_scalar("Test reward", average_test_reward, global_step=agent.time_step)
         env.reset()
+    if average_test_reward > 195:
+        print("Average reward over 100 episodes is {}".format(average_test_reward))
+        break
 
     if done:
         num_episode += 1
