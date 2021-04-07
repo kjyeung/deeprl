@@ -37,7 +37,7 @@ for i_episode in range(NUM_EPISODES):
         else:
             next_state = None
 
-        agent.memorize(state, action, next_state, reward, action_prob)
+        agent.memorize(reward, action_prob)
 
         state = next_state
         if done:

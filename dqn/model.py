@@ -57,7 +57,7 @@ class DQNAgent():
 
     def memorize(self, state, action, next_state, reward):
         reward = torch.tensor([reward]).to(self.device)
-        self.replay_buffer.append((state, action, next_state, reward))
+        self.replay_buffer.append(Transition(state, action, next_state, reward))
         if len(self.replay_buffer) > self.replay_size:
             # print("Replay_buffer size is {} now. Popping old ones.".format(len(self.replay_buffer)))
             self.replay_buffer.popleft()
@@ -71,11 +71,11 @@ class DQNAgent():
 
         batch = random.sample(self.replay_buffer, self.batch_size)
 
-        state_batch = torch.cat([data[0] for data in batch]).to(torch.float)
-        action_batch = torch.cat([data[1] for data in batch])
-        reward_batch = torch.cat([data[3] for data in batch])
+        state_batch = torch.cat([data.state for data in batch]).to(torch.float)
+        action_batch = torch.cat([data.action for data in batch])
+        reward_batch = torch.cat([data.reward for data in batch])
 
-        next_state_batch = [data[2] for data in batch]
+        next_state_batch = [data.next_state for data in batch]
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None, next_state_batch)),
                                       device=self.device, dtype=torch.bool)
         non_final_next_states = torch.cat([s for s in next_state_batch if s is not None])

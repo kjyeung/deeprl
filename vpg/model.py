@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward', 'action_prob'))
+Transition = namedtuple('Transition', ('reward', 'action_prob'))
 
 class MLPPolicy(nn.Module):
     def __init__(self, d_state, d_hidden, d_action):
@@ -38,9 +38,9 @@ class VPGAgent():
         return action, action_prob
 
 
-    def memorize(self, state, action, next_state, reward, action_prob):
+    def memorize(self, reward, action_prob):
         reward = torch.tensor([reward]).to(self.device)
-        self.replay_buffer.append(Transition(state, action, next_state, reward, action_prob))
+        self.replay_buffer.append(Transition(reward, action_prob))
         return
 
     def learn(self):
