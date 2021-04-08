@@ -1,12 +1,11 @@
-import math
 import torch
-import random
-from collections import namedtuple, deque
+from collections import namedtuple
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
 Transition = namedtuple('Transition', ('reward', 'action_prob'))
+
 
 class MLPPolicy(nn.Module):
     def __init__(self, d_state, d_hidden, d_action):
@@ -18,9 +17,10 @@ class MLPPolicy(nn.Module):
     def forward(self, x):
         x = F.relu(self.linear1(x))
         x = self.linear2(x)
-        return self.head(x.view(x.size(0),-1))
+        return self.head(x)
 
-class VPGAgent():
+
+class VPGAgent:
     def __init__(self, device, lr, gamma=0.99):
         self.replay_buffer = []
         self.time_step = 0
@@ -28,15 +28,14 @@ class VPGAgent():
         self.device = device
         self.gamma = torch.tensor([gamma], device=device)
         self.optimizer = None
-        self.update_iters = 0
         self.lr = lr
 
     def act(self, state):
+        self.time_step += 1
         action_probs = self.policy_net(state)
         action = torch.multinomial(action_probs, 1)
-        action_prob = torch.gather(action_probs, 1, action)
+        action_prob = action_probs.gather(1, action)
         return action, action_prob
-
 
     def memorize(self, reward, action_prob):
         reward = torch.tensor([reward]).to(self.device)
@@ -56,5 +55,5 @@ class VPGAgent():
             accumulative_loss += loss
             loss.backward(retain_graph=True)
         self.optimizer.step()
-        self.replay_buffer = []
+        self.replay_buffer.clear()
         return accumulative_loss
