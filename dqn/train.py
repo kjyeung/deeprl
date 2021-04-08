@@ -1,5 +1,6 @@
 import time
-import torch, gym
+import torch
+import gym
 
 from itertools import count
 from model import MLPPolicy, DQNAgent
@@ -8,36 +9,37 @@ from torch.utils.tensorboard import SummaryWriter
 start = time.time()
 writer = SummaryWriter()
 
+# Hyper-parameters
 BATCH_SIZE = 512
-REPLAY_SIZE = 5000
-LR =  0.001
+MEMORY_SIZE = 5000
+LR = 0.001
 test_interval = 1000
 test_episodes = 100
-TIMESTEPS=5000
-EPSILON_ENDT = 1000
+TIMESTEPS = 10000
+EPSILON_ENDT = 3000
 
 env = gym.make('CartPole-v0')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-d_states = env.observation_space.shape[0]
-d_actions = env.action_space.n
-agent = DQNAgent(d_actions, device, BATCH_SIZE, REPLAY_SIZE, TIMESTEPS, LR, EPSILON_ENDT)
-agent.policy_net = MLPPolicy(d_states, 20, d_actions).to(device)
-train_durations = []
+agent = DQNAgent(d_actions=env.action_space.n, device=device, batch_size=BATCH_SIZE, memory_size=MEMORY_SIZE, lr=LR,
+                 epsilon_endt=EPSILON_ENDT)
+agent.policy_net = MLPPolicy(d_state=env.observation_space.shape[0], d_hidden=20,
+                             d_action=env.action_space.n).to(device)
+
+init = time.time()
+print("Init time {}".format(init-start))
+
 num_episode = 0
 episode_t = 0
 
-
 state = env.reset()
-state = torch.from_numpy(state).unsqueeze_(0).to(torch.float).to(device)
-init = time.time()
-print("Init time {}".format(init-start))
+state = torch.from_numpy(state).unsqueeze_(0).to(device=device, dtype=torch.float)
 while agent.time_step < TIMESTEPS:
     action = agent.act(state)
     next_state, reward, done, _ = env.step(action.item())
     episode_t += 1
 
     if not done:
-        next_state = torch.from_numpy(next_state).unsqueeze_(0).to(torch.float).to(device)
+        next_state = torch.from_numpy(next_state).unsqueeze_(0).to(device=device, dtype=torch.float)
     else:
         next_state = None
 
@@ -56,7 +58,7 @@ while agent.time_step < TIMESTEPS:
         for i in range(test_episodes):
             test_state = env.reset()
             for t in count():
-                test_state = torch.from_numpy(test_state).unsqueeze_(0).to(device).to(torch.float)
+                test_state = torch.from_numpy(test_state).unsqueeze_(0).to(device=device, dtype=torch.float)
                 test_action = agent.act(test_state, eval=True)
                 test_next_state, _, test_done, _ = env.step(test_action.item())
                 if test_done:
@@ -75,8 +77,7 @@ while agent.time_step < TIMESTEPS:
     if done:
         num_episode += 1
         state = env.reset()
-        state = torch.from_numpy(state).unsqueeze_(0).to(torch.float).to(device)
-        train_durations.append(episode_t)
+        state = torch.from_numpy(state).unsqueeze_(0).to(device=device, dtype=torch.float)
         writer.add_scalar("Train durations/episode", episode_t, global_step=num_episode)
         episode_t = 0
 
@@ -84,7 +85,3 @@ env.close()
 writer.close()
 end = time.time()
 print('Time:{}'.format(end-start))
-#
-#
-#
-#
