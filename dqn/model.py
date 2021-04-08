@@ -19,7 +19,6 @@ class MLPPolicy(nn.Module):
         self.head = nn.Linear(d_hidden, d_action)
 
     def forward(self, x):
-        x = x.float()
         x = F.relu(self.linear1(x))
         x = F.relu(self.linear2(x))
         return self.head(x)
