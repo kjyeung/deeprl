@@ -1,2 +1,5 @@
 # deeprl-reinplementations
-Reinplementations of important deep RL algorithms
+Reinplementations of selected deep reinforcement learning algorithms.
+ 
+## Todos
+- [ ] A2C
